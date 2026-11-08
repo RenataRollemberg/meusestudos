@@ -1,10 +1,17 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2df4f">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <title>Margem</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="style.css">
-
+</head>
+<body>
 <header class="topo">
   <div class="topo-in">
     <div class="marca">
@@ -15,10 +22,19 @@
       <button type="button" class="aba" id="aba-notas" data-view="notas" aria-pressed="true">Anotações</button>
       <button type="button" class="aba" id="aba-vocab" data-view="vocab" aria-pressed="false">Vocabulário</button>
     </nav>
+    <button type="button" class="btn-txt" id="btn-sair" hidden>Sair</button>
   </div>
 </header>
 
 <p class="aviso" id="aviso" hidden></p>
+
+<section id="login" class="login" hidden>
+  <div class="cartao login-cartao">
+    <h1 class="titulo">Suas anotações, em qualquer lugar</h1>
+    <p class="sub">Entre com sua conta Google. Cursos, anotações e vocabulário ficam salvos só para você.</p>
+    <button type="button" class="btn btn-pri" id="btn-login">Entrar com Google</button>
+  </div>
+</section>
 
 <main class="pagina">
   <!-- ANOTAÇÕES -->
@@ -105,6 +121,28 @@
 
     <div id="vocab-lista"></div>
   </section>
+
+  <details class="backup" id="backup">
+    <summary>Backup dos dados</summary>
+    <div class="backup-corpo">
+      <p class="sub">Copie todos os seus cursos, anotações e vocabulário para guardar ou levar para outra versão do Margem.</p>
+      <div class="acoes" style="justify-content:flex-start">
+        <button type="button" class="btn btn-sec" id="backup-copiar">Copiar meus dados</button>
+      </div>
+      <label for="backup-texto">Colar backup para importar</label>
+      <textarea id="backup-texto" rows="3" placeholder="Cole aqui o texto copiado"></textarea>
+      <div class="acoes" style="justify-content:flex-start">
+        <button type="button" class="btn btn-sec" id="backup-importar">Importar</button>
+      </div>
+      <p class="status" id="backup-msg" aria-live="polite"></p>
+    </div>
+  </details>
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script src="app.js"></script>
+</body>
+</html>

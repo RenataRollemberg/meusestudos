@@ -175,6 +175,15 @@ label { font-family: var(--f-mono); font-size: 0.74rem; letter-spacing: 0.06em; 
 .termo .ex::before { content: "ex. "; font-family: var(--f-mono); font-style: normal; font-size: 0.72rem; }
 mark { background: var(--marca); color: var(--marca-tinta); border-radius: 2px; padding: 0 1px; }
 
+/* Login (versão Firebase) e backup */
+.sem-login .pagina, .sem-login .abas { display: none; }
+.login { max-width: 520px; margin: 0 auto; padding-block: 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login-cartao { align-items: flex-start; padding: 24px; }
+.backup { border-top: 1px dashed var(--linha); padding-top: 12px; margin-top: 24px; }
+.backup summary { cursor: pointer; font-family: var(--f-mono); font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--apagado); }
+.backup-corpo { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.backup-corpo .status { margin: 0; }
+
 @media (max-width: 480px) {
   .curso-novo { max-width: none; }
   .aba { padding: 7px 12px; }

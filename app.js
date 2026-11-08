@@ -74,8 +74,64 @@
     render();
   }
 
+  // Assinatura comum: Firestore (compat) e o db do Claude entregam snap.docs, d.exists, d.data(), snap.metadata.fromCache
+  function ouvir(col, opcoesFirestore) {
+    var timer = setTimeout(function () { aviso("Ainda carregando suas anotações… Se demorar, confira sua conexão."); }, 10000);
+    var next = function (snap) {
+      itens = new Map();
+      snap.docs.forEach(function (d) { if (d.exists) itens.set(d.id, d.data()); });
+      if (!snap.metadata.fromCache) { clearTimeout(timer); aviso(""); }
+      render();
+    };
+    var erro = function () {
+      clearTimeout(timer);
+      aviso("Não foi possível carregar suas anotações agora. Recarregue a página mais tarde.");
+    };
+    var unsub = opcoesFirestore ? col.onSnapshot(opcoesFirestore, next, erro) : col.onSnapshot(next, erro);
+    return function () { clearTimeout(timer); unsub(); };
+  }
+
+  function configFirebaseOk() {
+    var cfg = window.FIREBASE_CONFIG;
+    return !!(window.firebase && cfg && cfg.apiKey && cfg.appId && !/COLE_AQUI/.test(cfg.apiKey + cfg.appId));
+  }
+
+  function iniciarFirebase() {
+    firebase.initializeApp(window.FIREBASE_CONFIG);
+    var auth = firebase.auth(), fs = firebase.firestore();
+    try { fs.enablePersistence({ synchronizeTabs: true }).catch(function () {}); } catch (e) {}
+    var pararDeOuvir = null;
+
+    $("btn-login").addEventListener("click", function () {
+      var p = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(p).catch(function (e) {
+        if (e && (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment")) auth.signInWithRedirect(p);
+        else if (e && e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request")
+          aviso("Não foi possível entrar com o Google (" + (e.code || "erro") + "). Tente de novo.");
+      });
+    });
+    $("btn-sair").addEventListener("click", function () { salvarRascunhoAgora(); auth.signOut(); });
+
+    auth.onAuthStateChanged(function (u) {
+      if (pararDeOuvir) { pararDeOuvir(); pararDeOuvir = null; }
+      itens = new Map(); rascunhoDe = null; colecao = null;
+      document.body.classList.toggle("sem-login", !u);
+      $("login").hidden = !!u;
+      $("btn-sair").hidden = !u;
+      if (!u) { modo = "carregando"; aviso(""); render(); return; }
+      modo = "nuvem";
+      colecao = fs.collection("users").doc(u.uid).collection("itens");
+      pararDeOuvir = ouvir(colecao, { includeMetadataChanges: true });
+    });
+  }
+
   async function iniciar() {
     render();
+    if (window.FIREBASE_CONFIG && !configFirebaseOk()) {
+      iniciarLocal("O Firebase ainda não foi configurado (arquivo firebase-config.js). Por enquanto, as anotações ficam só neste navegador.");
+      return;
+    }
+    if (configFirebaseOk()) { iniciarFirebase(); return; }
     var c = window.claude;
     if (!c || typeof c.use !== "function") {
       iniciarLocal("Abra pelo Claude para guardar suas anotações na sua conta. Por enquanto, elas ficam só neste navegador.");
@@ -93,17 +149,44 @@
     }
     modo = "nuvem";
     colecao = db.collection("data/users/" + uid);
-    var timer = setTimeout(function () { aviso("Ainda carregando suas anotações… Se demorar, confira sua conexão."); }, 10000);
-    colecao.onSnapshot(function (snap) {
-      itens = new Map();
-      snap.docs.forEach(function (d) { if (d.exists) itens.set(d.id, d.data()); });
-      if (!snap.metadata.fromCache) { clearTimeout(timer); aviso(""); }
-      render();
-    }, function () {
-      clearTimeout(timer);
-      aviso("Não foi possível carregar suas anotações agora. Recarregue a página mais tarde.");
-    });
+    ouvir(colecao);
   }
+
+  // ---------- Backup (copiar / colar) ----------
+  var KINDS = { curso: 1, nota: 1, vocab: 1, rascunho: 1 };
+  function textoBackup() {
+    var obj = { app: "margem", versao: 1, exportado: new Date().toISOString(), itens: {} };
+    itens.forEach(function (v, k) { obj.itens[k] = v; });
+    return JSON.stringify(obj);
+  }
+  function msgBackup(t) { $("backup-msg").textContent = t; }
+  $("backup-copiar").addEventListener("click", function () {
+    var txt = textoBackup(), area = $("backup-texto");
+    var mostrar = function () { area.value = txt; area.focus(); area.select(); msgBackup("Selecionei os dados no campo abaixo. Copie e guarde."); };
+    try {
+      navigator.clipboard.writeText(txt).then(function () {
+        msgBackup("Dados copiados (" + plural(itens.size, "item", "itens") + "). Cole no Margem novo e toque em Importar.");
+      }, mostrar);
+    } catch (e) { mostrar(); }
+  });
+  $("backup-importar").addEventListener("click", function () {
+    var bruto = $("backup-texto").value.trim();
+    if (!bruto) { msgBackup("Cole os dados copiados no campo acima antes de importar."); return; }
+    if (modo === "carregando") { msgBackup("Entre na sua conta antes de importar."); return; }
+    var obj;
+    try { obj = JSON.parse(bruto); } catch (e) { msgBackup("Esse texto não é um backup do Margem. Copie de novo, sem cortar o começo nem o fim."); return; }
+    var lista = obj && obj.itens;
+    if (!lista || typeof lista !== "object") { msgBackup("Esse texto não é um backup do Margem."); return; }
+    var novos = 0, iguais = 0;
+    Object.keys(lista).forEach(function (id) {
+      var v = lista[id];
+      if (!/^[crnv]-[A-Za-z0-9-]+$/.test(id) || !v || !KINDS[v.kind]) return;
+      if (itens.has(id)) { iguais++; return; }
+      gravar(id, v); novos++;
+    });
+    $("backup-texto").value = "";
+    msgBackup(novos ? "Importei " + plural(novos, "item", "itens") + (iguais ? " (" + iguais + " já existiam)." : ".") : "Nada novo para importar: tudo já estava aqui.");
+  });
 
   // ---------- Utilitários de DOM ----------
   function el(tag, attrs, filhos) {
