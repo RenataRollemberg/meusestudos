@@ -1,0 +1,110 @@
+<title>Margem</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<header class="topo">
+  <div class="topo-in">
+    <div class="marca">
+      <span class="marca-nome"><span class="marca-marca">Margem</span></span>
+      <span class="marca-sub">anotações de estudo</span>
+    </div>
+    <nav class="abas" aria-label="Seções">
+      <button type="button" class="aba" id="aba-notas" data-view="notas" aria-pressed="true">Anotações</button>
+      <button type="button" class="aba" id="aba-vocab" data-view="vocab" aria-pressed="false">Vocabulário</button>
+    </nav>
+  </div>
+</header>
+
+<p class="aviso" id="aviso" hidden></p>
+
+<main class="pagina">
+  <!-- ANOTAÇÕES -->
+  <section id="view-notas" class="view">
+    <div class="cursos-barra">
+      <div class="cursos-lista" id="cursos-lista" role="list"></div>
+      <form class="curso-novo" id="form-curso" autocomplete="off">
+        <label for="curso-nome" class="sr">Nome do novo curso</label>
+        <input id="curso-nome" maxlength="60" placeholder="+ Novo curso">
+        <button type="submit" class="btn btn-sec">Adicionar</button>
+      </form>
+    </div>
+
+    <div id="sugestoes" class="sugestoes" hidden>
+      <span class="rotulo">Sugestões rápidas</span>
+      <div class="sugestoes-lista" id="sugestoes-lista"></div>
+    </div>
+
+    <div id="sem-curso" class="vazio" hidden>
+      <strong>Comece criando um curso</strong>
+      Digite o nome em “+ Novo curso” acima. Cada curso guarda as próprias anotações.
+    </div>
+
+    <div id="curso-area" class="view" hidden>
+      <div id="curso-cabeca"></div>
+
+      <form class="cartao nota-form" id="form-nota" autocomplete="off">
+        <div class="campo">
+          <label for="nota-titulo">Título <span class="opc">(opcional)</span></label>
+          <input id="nota-titulo" maxlength="120" placeholder="Ex.: Aula 3 — Tipos de malware">
+        </div>
+        <div class="campo">
+          <label for="nota-texto">Anotação</label>
+          <textarea id="nota-texto" rows="6" required placeholder="Escreva o que aprendeu…"></textarea>
+        </div>
+        <div class="acoes">
+          <span class="status" id="nota-status" aria-live="polite"></span>
+          <button type="button" class="btn btn-sec" id="nota-cancelar" hidden>Cancelar</button>
+          <button type="submit" class="btn btn-pri" id="nota-salvar">Salvar anotação</button>
+        </div>
+      </form>
+
+      <div class="busca">
+        <label for="nota-busca" class="sr">Buscar nas anotações deste curso</label>
+        <input id="nota-busca" type="search" placeholder="Buscar nas anotações deste curso">
+        <span class="contagem" id="nota-contagem"></span>
+      </div>
+
+      <div id="notas-lista" class="notas"></div>
+    </div>
+  </section>
+
+  <!-- VOCABULÁRIO -->
+  <section id="view-vocab" class="view" hidden>
+    <div class="vocab-cabeca">
+      <h1 class="titulo">Vocabulário</h1>
+      <p class="sub">Um glossário só seu, igual para todos os cursos.</p>
+    </div>
+
+    <form class="cartao vocab-form" id="form-vocab" autocomplete="off">
+      <div class="campo">
+        <label for="vocab-termo">Termo</label>
+        <input id="vocab-termo" maxlength="80" required placeholder="Ex.: Phishing">
+      </div>
+      <div class="campo">
+        <label for="vocab-sig">Significado</label>
+        <textarea id="vocab-sig" rows="2" maxlength="1000" required placeholder="O que quer dizer, com suas palavras"></textarea>
+      </div>
+      <div class="campo">
+        <label for="vocab-ex">Exemplo <span class="opc">(opcional)</span></label>
+        <input id="vocab-ex" maxlength="300" placeholder="Uma frase usando o termo">
+      </div>
+      <div class="acoes">
+        <button type="button" class="btn btn-sec" id="vocab-cancelar" hidden>Cancelar</button>
+        <button type="submit" class="btn btn-pri" id="vocab-salvar">Adicionar ao vocabulário</button>
+      </div>
+    </form>
+
+    <div class="busca">
+      <label for="vocab-busca" class="sr">Buscar no vocabulário</label>
+      <input id="vocab-busca" type="search" placeholder="Buscar termo ou significado">
+      <span class="contagem" id="vocab-contagem"></span>
+    </div>
+
+    <div id="vocab-lista"></div>
+  </section>
+</main>
+
+<script src="app.js"></script>
